@@ -1479,7 +1479,10 @@
             document.getElementById(id).classList.remove('active');
         }
 
-        loadSharedData();
+        renderCategories();
+        renderProducts();
+        updateCartBadge();
+        loadSharedData().catch(error => console.error('Supabase load error:', error));
     </script>
 </body>
 </html>
