@@ -886,7 +886,7 @@
 
         const SUPABASE_URL = "https://wusiwphxjqwnmwkxcqac.supabase.co";
         const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_tCPv7dfMWzFZQYxTMRv2Bg_9HlyCtgt";
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+        const trendixDb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
         const defaultCategories = ["ساعات", "أساور", "سلاسل", "نظارات"];
         const defaultProducts = [
@@ -920,19 +920,19 @@
         ];
 
         let categories = defaultCategories;
-        let products = [];
+        let products = defaultProducts;
         let cart = JSON.parse(localStorage.getItem('trendix_cart')) || [];
         let orders = [];
         let currentFilter = 'الكل';
         let currentOrderFilter = 'all';
 
         async function loadSharedData() {
-            const categoriesResult = await supabase.from('trendix_categories').select('*').order('id');
+            const categoriesResult = await trendixDb.from('trendix_categories').select('*').order('id');
             if (!categoriesResult.error && categoriesResult.data?.length) {
                 categories = categoriesResult.data.map(row => row.name);
             }
 
-            const productsResult = await supabase.from('trendix_products').select('*').order('id');
+            const productsResult = await trendixDb.from('trendix_products').select('*').order('id');
             if (!productsResult.error && productsResult.data) {
                 products = productsResult.data.map(row => ({
                     id: row.id,
@@ -945,7 +945,7 @@
                 }));
             }
 
-            const ordersResult = await supabase.from('trendix_orders').select('*');
+            const ordersResult = await trendixDb.from('trendix_orders').select('*');
             if (!ordersResult.error && ordersResult.data) {
                 orders = ordersResult.data.map(row => ({
                     id: row.id,
@@ -960,24 +960,25 @@
             renderCategories();
             renderProducts();
             updateCartBadge();
+            loadSharedData().catch(error => console.error('Supabase load error:', error));
         }
 
         async function saveData() {
             localStorage.setItem('trendix_cart', JSON.stringify(cart));
 
-            const categoryDelete = await supabase.from('trendix_categories').delete().neq('id', 0);
+            const categoryDelete = await trendixDb.from('trendix_categories').delete().neq('id', 0);
             if (categoryDelete.error) console.error(categoryDelete.error);
             if (categories.length) {
-                const categoryInsert = await supabase.from('trendix_categories').insert(
+                const categoryInsert = await trendixDb.from('trendix_categories').insert(
                     categories.map(name => ({ name }))
                 );
                 if (categoryInsert.error) console.error(categoryInsert.error);
             }
 
-            const productDelete = await supabase.from('trendix_products').delete().neq('id', 0);
+            const productDelete = await trendixDb.from('trendix_products').delete().neq('id', 0);
             if (productDelete.error) console.error(productDelete.error);
             if (products.length) {
-                const productInsert = await supabase.from('trendix_products').insert(products.map(product => ({
+                const productInsert = await trendixDb.from('trendix_products').insert(products.map(product => ({
                     id: product.id,
                     name: product.name,
                     category: product.category,
@@ -989,10 +990,10 @@
                 if (productInsert.error) console.error(productInsert.error);
             }
 
-            const orderDelete = await supabase.from('trendix_orders').delete().neq('id', '');
+            const orderDelete = await trendixDb.from('trendix_orders').delete().neq('id', '');
             if (orderDelete.error) console.error(orderDelete.error);
             if (orders.length) {
-                const orderInsert = await supabase.from('trendix_orders').insert(orders.map(order => ({
+                const orderInsert = await trendixDb.from('trendix_orders').insert(orders.map(order => ({
                     id: order.id,
                     date: order.date,
                     customer: order.customer,
